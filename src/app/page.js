@@ -1,9 +1,41 @@
+"use client";
+
+import { Instagram } from "lucide-react";
+import { Header } from "@/components/header";
+import { PlatformCard } from "@/components/platform-card";
+import { TwitterIcon } from "@/components/icons/twitter";
+import { Background } from "@/components/background";
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-6">
-      <div className="max-w-xl text-center space-y-3">
-        <h1 className="text-3xl font-semibold">Socialmedia Wrapper</h1>
-      </div>
-    </main>
+    <>
+      <Background />
+
+      <main className="relative min-h-svh flex flex-col px-4 sm:px-6 lg:px-8">
+        <div className="flex-1 flex flex-col items-center justify-center py-12 sm:py-16 lg:py-20">
+          <div className="w-full max-w-5xl space-y-10 sm:space-y-14 lg:space-y-16">
+            <Header />
+
+            {/* Platform Cards */}
+            <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto w-full">
+              <PlatformCard
+                icon={Instagram}
+                title="Instagram"
+                description="Gönderilerini, hikayelerini ve beğenilerini analiz et."
+                buttonText="Analizi Başlat"
+                variant="instagram"
+              />
+              <PlatformCard
+                icon={TwitterIcon}
+                title="Twitter / X"
+                description="Tweetlerini, beğenilerini ve etkileşimlerini keşfet."
+                buttonText="Analizi Başlat"
+                variant="twitter"
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+    </>
   );
 }
