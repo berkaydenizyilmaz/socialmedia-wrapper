@@ -1,12 +1,20 @@
 "use client";
 
-import { Instagram } from "lucide-react";
+import { useState } from "react";
 import { Header } from "@/components/header";
 import { PlatformCard } from "@/components/platform-card";
-import { TwitterIcon } from "@/components/icons/twitter";
 import { Background } from "@/components/background";
+import { UploadModal } from "@/components/upload-modal";
 
 export default function Home() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
+
+  const openModal = (platform) => {
+    setSelectedPlatform(platform);
+    setModalOpen(true);
+  };
+
   return (
     <>
       <Background />
@@ -19,23 +27,29 @@ export default function Home() {
             {/* Platform Cards */}
             <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto w-full">
               <PlatformCard
-                icon={Instagram}
                 title="Instagram"
                 description="Gönderilerini, hikayelerini ve beğenilerini analiz et."
                 buttonText="Analizi Başlat"
                 variant="instagram"
+                onClick={() => openModal("instagram")}
               />
               <PlatformCard
-                icon={TwitterIcon}
                 title="Twitter / X"
                 description="Tweetlerini, beğenilerini ve etkileşimlerini keşfet."
                 buttonText="Analizi Başlat"
                 variant="twitter"
+                onClick={() => openModal("twitter")}
               />
             </div>
           </div>
         </div>
       </main>
+
+      <UploadModal
+        platform={selectedPlatform}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </>
   );
 }

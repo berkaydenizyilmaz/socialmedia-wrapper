@@ -1,24 +1,24 @@
+import Image from "next/image";
+import { Instagram } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-export function PlatformCard({ icon: Icon, title, description, buttonText, variant = "default", onClick }) {
-  const variants = {
-    instagram: {
-      gradient: "from-purple-500 via-pink-500 to-orange-500",
-      glow: "bg-pink-500/40",
-    },
-    twitter: {
-      gradient: "from-neutral-200 to-neutral-400",
-      glow: "bg-neutral-400/40",
-    },
-    default: {
-      gradient: "from-primary to-primary",
-      glow: "bg-primary/40",
-    },
-  };
+const variants = {
+  instagram: {
+    gradient: "from-purple-500 via-pink-500 to-orange-500",
+    glow: "bg-pink-500/40",
+    icon: <Instagram className="h-8 w-8 sm:h-10 sm:w-10 text-white" />,
+  },
+  twitter: {
+    gradient: "from-neutral-200 to-neutral-400",
+    glow: "bg-neutral-400/40",
+    icon: <Image src="/twitter.png" alt="Twitter" width={40} height={40} className="h-8 w-8 sm:h-10 sm:w-10" />,
+  },
+};
 
-  const style = variants[variant] || variants.default;
+export function PlatformCard({ title, description, buttonText, variant = "instagram", onClick }) {
+  const style = variants[variant] || variants.instagram;
 
   return (
     <div className="group relative">
@@ -29,7 +29,7 @@ export function PlatformCard({ icon: Icon, title, description, buttonText, varia
         <CardHeader className="text-center pb-2 sm:pb-4 pt-6 sm:pt-8">
           {/* Icon with static gradient */}
           <div className={`mx-auto mb-4 sm:mb-6 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${style.gradient} shadow-lg`}>
-            <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+            {style.icon}
           </div>
 
           <CardTitle className="text-xl sm:text-2xl font-bold">{title}</CardTitle>
