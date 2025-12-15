@@ -11,7 +11,7 @@ export function Header() {
 
       <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight">
         <span className="block">Sosyal Medya</span>
-        <span className="block mt-1 sm:mt-2 bg-linear-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+        <span className="block mt-1 sm:mt-2 pb-3 bg-linear-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
           Geçmişini Keşfet
         </span>
       </h1>
