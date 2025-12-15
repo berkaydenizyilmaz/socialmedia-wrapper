@@ -19,7 +19,7 @@ export function Background() {
       />
 
       {/* Radial gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-background/50 to-background" />
     </div>
   );
 }

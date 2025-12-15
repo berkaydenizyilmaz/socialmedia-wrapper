@@ -102,7 +102,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${config.gradient}`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br ${config.gradient}`}>
               {config.icon}
             </div>
             <div>
@@ -163,7 +163,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
                 {isDragging ? "Bırak!" : "Klasörü sürükle veya tıkla"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                İndirdiğin ZIP'i çıkardıktan sonra klasörü seç
+                İndirdiğin ZIP&apos;i çıkardıktan sonra klasörü seç
               </p>
             </div>
           </>
@@ -172,7 +172,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
         {uploadState === "uploading" && (
           <div className="py-8">
             <div className="flex flex-col items-center">
-              <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${config.gradient}`}>
+              <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br ${config.gradient}`}>
                 <Upload className="h-8 w-8 text-white animate-pulse" />
               </div>
               <p className="text-sm font-medium mb-4">Veriler işleniyor...</p>
@@ -181,7 +181,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
               <div className="w-full max-w-xs">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
-                    className={`h-full bg-gradient-to-r ${config.gradient} transition-all duration-300 ease-out`}
+                    className={`h-full bg-linear-to-r ${config.gradient} transition-all duration-300 ease-out`}
                     style={{ width: `${progress}%` }}
                   />
                 </div>

@@ -28,7 +28,7 @@ export function PlatformCard({ title, description, buttonText, variant = "instag
       <Card className="relative border border-border/50 bg-card/80 backdrop-blur-sm transition-transform duration-300 ease-out group-hover:-translate-y-1">
         <CardHeader className="text-center pb-2 sm:pb-4 pt-6 sm:pt-8">
           {/* Icon with static gradient */}
-          <div className={`mx-auto mb-4 sm:mb-6 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${style.gradient} shadow-lg`}>
+          <div className={`mx-auto mb-4 sm:mb-6 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-linear-to-br ${style.gradient} shadow-lg`}>
             {style.icon}
           </div>
 
