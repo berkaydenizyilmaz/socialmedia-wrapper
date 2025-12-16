@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import Image from "next/image";
-import { Instagram, Upload, FolderOpen, CheckCircle2, ExternalLink } from "lucide-react";
+import { Instagram, Upload, FolderOpen, CheckCircle2, ExternalLink, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { useData } from "@/context/DataContext";
 
 const platformConfig = {
   instagram: {
@@ -43,9 +45,40 @@ const platformConfig = {
 };
 
 export function UploadModal({ platform, open, onOpenChange }) {
+  const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadState, setUploadState] = useState("idle");
-  const [progress, setProgress] = useState(0);
+  const [uploadState, setUploadState] = useState("idle"); // idle, uploading, processing, success, error
+  const [uploadError, setUploadError] = useState(null);
+  
+  const { processInstagramFiles, processingProgress, isProcessing } = useData();
+
+  const { 
+    isLoading: isUploading, 
+    error: fileError, 
+    progress: uploadProgress,
+    stats,
+    handleInputChange,
+    reset: resetFileUpload
+  } = useFileUpload({
+    expectedPlatform: platform,
+    onComplete: async (files) => {
+      setUploadState("processing");
+      try {
+        if (platform === "instagram") {
+          await processInstagramFiles(files);
+        }
+        // Twitter processing will be added later
+        setUploadState("success");
+      } catch (err) {
+        setUploadError(err.message || "Veriler işlenirken hata oluştu");
+        setUploadState("error");
+      }
+    },
+    onError: (error) => {
+      setUploadError(error);
+      setUploadState("error");
+    }
+  });
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -57,42 +90,43 @@ export function UploadModal({ platform, open, onOpenChange }) {
     setIsDragging(false);
   }, []);
 
-  const simulateUpload = useCallback(() => {
-    setUploadState("uploading");
-    setProgress(0);
-
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setUploadState("success");
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-  }, []);
-
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragging(false);
-    simulateUpload();
-  }, [simulateUpload]);
+    // Unfortunately, webkitdirectory doesn't work with drag & drop
+    // So we just show a message to use the file picker
+    setUploadError("Klasör sürüklemek şu an desteklenmiyor. Lütfen tıklayarak klasör seçin.");
+    setUploadState("error");
+  }, []);
 
-  const handleFileSelect = useCallback(() => {
-    simulateUpload();
-  }, [simulateUpload]);
+  const handleClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e) => {
+    setUploadState("uploading");
+    setUploadError(null);
+    handleInputChange(e);
+  }, [handleInputChange]);
 
   const resetState = useCallback(() => {
     setUploadState("idle");
-    setProgress(0);
-  }, []);
+    setUploadError(null);
+    resetFileUpload();
+  }, [resetFileUpload]);
 
   const config = platform ? platformConfig[platform] : null;
 
   if (!config) {
     return null;
   }
+
+  // Calculate combined progress
+  const currentProgress = uploadState === "uploading" 
+    ? uploadProgress 
+    : uploadState === "processing" 
+      ? processingProgress 
+      : 0;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -113,6 +147,17 @@ export function UploadModal({ platform, open, onOpenChange }) {
             </div>
           </div>
         </DialogHeader>
+
+        {/* Hidden file input with webkitdirectory */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          webkitdirectory="true"
+          directory=""
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+        />
 
         {uploadState === "idle" && (
           <>
@@ -142,7 +187,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={handleFileSelect}
+              onClick={handleClick}
               className={cn(
                 "relative mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors",
                 isDragging
@@ -160,7 +205,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
                 )} />
               </div>
               <p className="text-sm font-medium">
-                {isDragging ? "Bırak!" : "Klasörü sürükle veya tıkla"}
+                {isDragging ? "Bırak!" : "Klasörü seçmek için tıkla"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 İndirdiğin ZIP&apos;i çıkardıktan sonra klasörü seç
@@ -169,26 +214,34 @@ export function UploadModal({ platform, open, onOpenChange }) {
           </>
         )}
 
-        {uploadState === "uploading" && (
+        {(uploadState === "uploading" || uploadState === "processing") && (
           <div className="py-8">
             <div className="flex flex-col items-center">
               <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br ${config.gradient}`}>
                 <Upload className="h-8 w-8 text-white animate-pulse" />
               </div>
-              <p className="text-sm font-medium mb-4">Veriler işleniyor...</p>
+              <p className="text-sm font-medium mb-4">
+                {uploadState === "uploading" ? "Dosyalar okunuyor..." : "Veriler analiz ediliyor..."}
+              </p>
 
               {/* Progress bar */}
               <div className="w-full max-w-xs">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
                     className={`h-full bg-linear-to-r ${config.gradient} transition-all duration-300 ease-out`}
-                    style={{ width: `${progress}%` }}
+                    style={{ width: `${currentProgress}%` }}
                   />
                 </div>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
-                  %{progress}
+                  %{currentProgress}
                 </p>
               </div>
+
+              {stats && (
+                <p className="mt-4 text-xs text-muted-foreground">
+                  {stats.totalFiles} dosya • {stats.totalSizeMB} MB
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -199,10 +252,40 @@ export function UploadModal({ platform, open, onOpenChange }) {
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
-              <p className="text-sm font-medium">Veriler başarıyla yüklendi!</p>
+              <p className="text-sm font-medium">Veriler başarıyla işlendi!</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Analiz sayfasına yönlendiriliyorsun...
               </p>
+              <Button 
+                className="mt-4" 
+                onClick={() => {
+                  onOpenChange(false);
+                  // TODO: Navigate to analysis page
+                }}
+              >
+                Analizi Görüntüle
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {uploadState === "error" && (
+          <div className="py-8">
+            <div className="flex flex-col items-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+              </div>
+              <p className="text-sm font-medium">Bir hata oluştu</p>
+              <p className="mt-1 text-xs text-muted-foreground text-center max-w-xs">
+                {uploadError || fileError || "Bilinmeyen bir hata oluştu"}
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4" 
+                onClick={resetState}
+              >
+                Tekrar Dene
+              </Button>
             </div>
           </div>
         )}
