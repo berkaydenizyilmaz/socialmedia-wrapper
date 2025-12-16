@@ -12,13 +12,31 @@ import {
   UserX,
   ArrowLeft,
   Instagram,
+  Bookmark,
+  Sparkles,
+  Globe,
+  Smartphone,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { useData } from "@/context/DataContext";
 import { StatCard } from "@/components/analyze/stat-card";
 import { AccountList } from "@/components/analyze/account-list";
 import { TimelineChart } from "@/components/analyze/timeline-chart";
 import { Button } from "@/components/ui/button";
 import { Background } from "@/components/background";
+
+const PIE_COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#22c55e"];
 
 export default function InstagramAnalyzePage() {
   const router = useRouter();
@@ -41,7 +59,7 @@ export default function InstagramAnalyzePage() {
     );
   }
 
-  const { likes, followers, comments } = instagramData;
+  const { likes, followers, comments, loginActivity, topics, savedPosts } = instagramData;
   const summary = instagramSummary;
 
   return (
@@ -72,10 +90,10 @@ export default function InstagramAnalyzePage() {
             </div>
           </header>
 
-          {/* Stat Cards */}
+          {/* Stat Cards - Row 1 */}
           <section>
             <h2 className="text-lg font-semibold mb-4">Genel Bakış</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <StatCard
                 title="Toplam Beğeni"
                 value={summary.totalLikes.toLocaleString("tr-TR")}
@@ -100,6 +118,12 @@ export default function InstagramAnalyzePage() {
                 icon={UserPlus}
                 gradient="from-indigo-500 to-blue-500"
               />
+            </div>
+          </section>
+
+          {/* Stat Cards - Row 2 */}
+          <section>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <StatCard
                 title="Karşılıklı"
                 value={summary.mutualsCount.toLocaleString("tr-TR")}
@@ -107,10 +131,28 @@ export default function InstagramAnalyzePage() {
                 gradient="from-green-500 to-emerald-500"
               />
               <StatCard
-                title="Seni Takip Etmiyor"
+                title="Geri Takip Etmiyor"
                 value={summary.notFollowingBackCount.toLocaleString("tr-TR")}
                 icon={UserX}
                 gradient="from-orange-500 to-amber-500"
+              />
+              <StatCard
+                title="İlgi Alanı"
+                value={(summary.topicsCount || 0).toLocaleString("tr-TR")}
+                icon={Sparkles}
+                gradient="from-yellow-500 to-orange-500"
+              />
+              <StatCard
+                title="Kayıtlı İçerik"
+                value={(summary.savedPostsCount || 0).toLocaleString("tr-TR")}
+                icon={Bookmark}
+                gradient="from-teal-500 to-cyan-500"
+              />
+              <StatCard
+                title="Giriş Sayısı"
+                value={(summary.loginCount || 0).toLocaleString("tr-TR")}
+                icon={Globe}
+                gradient="from-slate-500 to-gray-500"
               />
             </div>
           </section>
@@ -133,6 +175,143 @@ export default function InstagramAnalyzePage() {
               />
             </div>
           </section>
+
+          {/* Topics/Interests */}
+          {topics?.categories && Object.keys(topics.categories).length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                İlgi Alanların ({topics.total})
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(topics.categories).map(([category, items]) => (
+                  <div
+                    key={category}
+                    className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4"
+                  >
+                    <h4 className="font-medium mb-2 text-sm">{category} ({items.length})</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {items.slice(0, 8).map((item, i) => (
+                        <span
+                          key={i}
+                          className="text-xs px-2 py-1 rounded bg-muted/50 text-muted-foreground"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                      {items.length > 8 && (
+                        <span className="text-xs px-2 py-1 text-muted-foreground">
+                          +{items.length - 8} daha
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Saved Posts */}
+          {savedPosts?.topAccounts && savedPosts.topAccounts.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Bookmark className="h-5 w-5" />
+                Kayıtlı İçerikler
+              </h2>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4">En Çok Kaydettiğin Hesaplar</h3>
+                  <div className="space-y-2">
+                    {savedPosts.topAccounts.slice(0, 10).map((item, i) => (
+                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                        <a 
+                          href={`https://instagram.com/${item.account}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm hover:underline"
+                        >
+                          @{item.account}
+                        </a>
+                        <span className="text-xs text-muted-foreground">{item.count} kayıt</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4">İçerik Türü Dağılımı</h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Reels", value: savedPosts.contentTypes?.reels || 0 },
+                          { name: "Posts", value: savedPosts.contentTypes?.posts || 0 },
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        <Cell fill="#ec4899" />
+                        <Cell fill="#8b5cf6" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Login Activity */}
+          {loginActivity?.loginsByHour && loginActivity.loginsByHour.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Giriş Aktivitesi
+              </h2>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4">Saate Göre Giriş Dağılımı</h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={loginActivity.loginsByHour}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                      <XAxis 
+                        dataKey="hour" 
+                        tick={{ fill: "#9ca3af", fontSize: 10 }}
+                        tickFormatter={(val) => `${val}:00`}
+                      />
+                      <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "none", borderRadius: "8px" }}
+                        labelFormatter={(val) => `${val}:00 - ${val}:59`}
+                      />
+                      <Bar dataKey="count" fill="#8b5cf6" radius={[2, 2, 0, 0]} name="Giriş" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    Cihaz Dağılımı
+                  </h3>
+                  {loginActivity.deviceDistribution && loginActivity.deviceDistribution.length > 0 ? (
+                    <div className="space-y-2">
+                      {loginActivity.deviceDistribution.map((item, i) => (
+                        <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                          <span className="text-sm">{item.device}</span>
+                          <span className="text-xs text-muted-foreground">{item.percentage}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Cihaz bilgisi bulunamadı</p>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Account Lists */}
           <section>

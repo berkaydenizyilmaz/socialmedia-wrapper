@@ -7,6 +7,9 @@ import { findFileByPath, readFileAsJSON } from "@/lib/file-reader";
 import { parseLikes, parseLikedComments } from "./likes";
 import { parseFollowers } from "./followers";
 import { parseComments, parseReelsComments } from "./comments";
+import { parseLoginActivity } from "./security";
+import { parseTopics } from "./topics";
+import { parseSavedPosts } from "./saved";
 
 // Known file paths in Instagram data export
 const FILE_PATHS = {
@@ -16,6 +19,9 @@ const FILE_PATHS = {
   following: "connections/followers_and_following/following.json",
   postComments: "your_instagram_activity/comments/post_comments_1.json",
   reelsComments: "your_instagram_activity/comments/reels_comments.json",
+  loginActivity: "security_and_login_information/login_and_profile_creation/login_activity.json",
+  topics: "preferences/your_topics/recommended_topics.json",
+  savedPosts: "your_instagram_activity/saved/saved_posts.json",
 };
 
 /**
@@ -32,6 +38,9 @@ export async function parseInstagramData(files, onProgress) {
     followers: null,
     comments: null,
     reelsComments: null,
+    loginActivity: null,
+    topics: null,
+    savedPosts: null,
     metadata: {
       parsedAt: new Date().toISOString(),
       fileCount: Object.keys(files).length,
@@ -39,8 +48,8 @@ export async function parseInstagramData(files, onProgress) {
     }
   };
 
-  const progressStep = 100 / 6;
-  let currentProgress = 0;
+  const totalSteps = 9;
+  let currentStep = 0;
 
   // Helper function to safely parse a file
   const safeParseFile = async (path, parser, ...extraArgs) => {
@@ -59,13 +68,13 @@ export async function parseInstagramData(files, onProgress) {
 
   // Parse liked posts
   result.likes = await safeParseFile(FILE_PATHS.likedPosts, parseLikes);
-  currentProgress += progressStep;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Parse liked comments
   result.likedComments = await safeParseFile(FILE_PATHS.likedComments, parseLikedComments);
-  currentProgress += progressStep;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Parse followers and following together
   const followersFile = findFileByPath(files, FILE_PATHS.followers);
@@ -78,18 +87,33 @@ export async function parseInstagramData(files, onProgress) {
   } catch (err) {
     errors.push({ path: "followers/following", error: err.message });
   }
-  currentProgress += progressStep;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Parse post comments
   result.comments = await safeParseFile(FILE_PATHS.postComments, parseComments);
-  currentProgress += progressStep;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Parse reels comments
   result.reelsComments = await safeParseFile(FILE_PATHS.reelsComments, parseReelsComments);
-  currentProgress += progressStep;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse login activity
+  result.loginActivity = await safeParseFile(FILE_PATHS.loginActivity, parseLoginActivity);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse topics
+  result.topics = await safeParseFile(FILE_PATHS.topics, parseTopics);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse saved posts
+  result.savedPosts = await safeParseFile(FILE_PATHS.savedPosts, parseSavedPosts);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Finalize
   result.metadata.errors = errors;
@@ -112,6 +136,12 @@ export function getInstagramSummary(data) {
     mutualsCount: data.followers?.stats?.mutualsCount || 0,
     notFollowingBackCount: data.followers?.stats?.notFollowingBackCount || 0,
     topLikedAccounts: data.likes?.topAccounts?.slice(0, 5) || [],
-    topCommentedAccounts: data.comments?.topCommentedAccounts?.slice(0, 5) || []
+    topCommentedAccounts: data.comments?.topCommentedAccounts?.slice(0, 5) || [],
+    
+    // New stats
+    topicsCount: data.topics?.total || 0,
+    savedPostsCount: data.savedPosts?.total || 0,
+    loginCount: data.loginActivity?.total || 0,
+    uniqueLoginIps: data.loginActivity?.uniqueIps || 0
   };
 }
