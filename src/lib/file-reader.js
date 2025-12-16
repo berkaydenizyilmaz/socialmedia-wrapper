@@ -27,6 +27,18 @@ export async function readFileAsJSON(file) {
 }
 
 /**
+ * Read a Twitter .js file (window.YTD.*.part0 = [...] format)
+ * @param {File} file - Twitter JS file
+ * @returns {Promise<Array>} Parsed array content
+ */
+export async function readTwitterJsFile(file) {
+  const text = await file.text();
+  // Remove "window.YTD.*.part0 = " prefix to get pure JSON
+  const jsonStr = text.replace(/^window\.YTD\.\w+\.part\d+\s*=\s*/, '');
+  return JSON.parse(jsonStr);
+}
+
+/**
  * Find a file by partial path match
  * @param {Object} files - File map from readDirectory
  * @param {string} partialPath - Partial path to search for

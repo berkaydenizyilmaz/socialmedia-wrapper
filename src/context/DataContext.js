@@ -2,12 +2,20 @@
 
 import { createContext, useContext, useState, useCallback } from "react";
 import { parseInstagramData, getInstagramSummary } from "@/lib/parsers/instagram";
+import { parseTwitterData, getTwitterSummary } from "@/lib/parsers/twitter";
 
 const DataContext = createContext(null);
 
 export function DataProvider({ children }) {
+  // Instagram state
   const [instagramData, setInstagramData] = useState(null);
   const [instagramSummary, setInstagramSummary] = useState(null);
+  
+  // Twitter state
+  const [twitterData, setTwitterData] = useState(null);
+  const [twitterSummary, setTwitterSummary] = useState(null);
+  
+  // Shared processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [error, setError] = useState(null);
@@ -34,9 +42,38 @@ export function DataProvider({ children }) {
     }
   }, []);
 
+  const processTwitterFiles = useCallback(async (files) => {
+    setIsProcessing(true);
+    setError(null);
+    setProcessingProgress(0);
+
+    try {
+      const data = await parseTwitterData(files, (progress) => {
+        setProcessingProgress(progress);
+      });
+      
+      setTwitterData(data);
+      setTwitterSummary(getTwitterSummary(data));
+      
+      return data;
+    } catch (err) {
+      setError(err.message || "Veriler işlenirken hata oluştu");
+      throw err;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
   const clearInstagramData = useCallback(() => {
     setInstagramData(null);
     setInstagramSummary(null);
+    setError(null);
+    setProcessingProgress(0);
+  }, []);
+
+  const clearTwitterData = useCallback(() => {
+    setTwitterData(null);
+    setTwitterSummary(null);
     setError(null);
     setProcessingProgress(0);
   }, []);
@@ -48,13 +85,21 @@ export function DataProvider({ children }) {
     processInstagramFiles,
     clearInstagramData,
     
+    // Twitter data
+    twitterData,
+    twitterSummary,
+    processTwitterFiles,
+    clearTwitterData,
+    
     // Processing state
     isProcessing,
     processingProgress,
     error,
     
     // Utility
-    hasData: !!instagramData
+    hasData: !!instagramData || !!twitterData,
+    hasInstagramData: !!instagramData,
+    hasTwitterData: !!twitterData
   };
 
   return (

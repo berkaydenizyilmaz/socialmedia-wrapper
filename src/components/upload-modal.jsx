@@ -52,7 +52,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
   const [uploadState, setUploadState] = useState("idle"); // idle, uploading, processing, success, error
   const [uploadError, setUploadError] = useState(null);
   
-  const { processInstagramFiles, processingProgress, isProcessing } = useData();
+  const { processInstagramFiles, processTwitterFiles, processingProgress, isProcessing } = useData();
 
   const { 
     isLoading: isUploading, 
@@ -68,8 +68,9 @@ export function UploadModal({ platform, open, onOpenChange }) {
       try {
         if (platform === "instagram") {
           await processInstagramFiles(files);
+        } else if (platform === "twitter") {
+          await processTwitterFiles(files);
         }
-        // Twitter processing will be added later
         setUploadState("success");
       } catch (err) {
         setUploadError(err.message || "Veriler işlenirken hata oluştu");
