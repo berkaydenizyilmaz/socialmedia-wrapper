@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,8 +14,8 @@ import {
   Instagram,
   Bookmark,
   Sparkles,
-  Globe,
-  Smartphone,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   BarChart,
@@ -38,6 +38,47 @@ import { Background } from "@/components/background";
 
 const PIE_COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#22c55e"];
 
+// Expandable topic card component
+function TopicCard({ category, items }) {
+  const [expanded, setExpanded] = useState(false);
+  const displayItems = expanded ? items : items.slice(0, 8);
+  const hasMore = items.length > 8;
+
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4">
+      <h4 className="font-medium mb-2 text-sm">
+        {category} ({items.length})
+      </h4>
+      <div className="flex flex-wrap gap-1">
+        {displayItems.map((item, i) => (
+          <span
+            key={i}
+            className="text-xs px-2 py-1 rounded bg-muted/50 text-muted-foreground"
+          >
+            {item}
+          </span>
+        ))}
+        {hasMore && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center gap-1"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" /> Daralt
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" /> +{items.length - 8} daha
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function InstagramAnalyzePage() {
   const router = useRouter();
   const { instagramData, instagramSummary, hasData } = useData();
@@ -59,7 +100,7 @@ export default function InstagramAnalyzePage() {
     );
   }
 
-  const { likes, followers, comments, loginActivity, topics, savedPosts } = instagramData;
+  const { likes, followers, comments, topics, savedPosts } = instagramData;
   const summary = instagramSummary;
 
   return (
@@ -123,7 +164,7 @@ export default function InstagramAnalyzePage() {
 
           {/* Stat Cards - Row 2 */}
           <section>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="Karşılıklı"
                 value={summary.mutualsCount.toLocaleString("tr-TR")}
@@ -148,18 +189,14 @@ export default function InstagramAnalyzePage() {
                 icon={Bookmark}
                 gradient="from-teal-500 to-cyan-500"
               />
-              <StatCard
-                title="Giriş Sayısı"
-                value={(summary.loginCount || 0).toLocaleString("tr-TR")}
-                icon={Globe}
-                gradient="from-slate-500 to-gray-500"
-              />
             </div>
           </section>
 
           {/* Timeline Charts */}
           <section>
-            <h2 className="text-lg font-semibold mb-4">Aktivite Zaman Çizelgesi</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Aktivite Zaman Çizelgesi
+            </h2>
             <div className="grid gap-6 lg:grid-cols-2">
               <TimelineChart
                 title="Beğeni Aktivitesi"
@@ -185,27 +222,7 @@ export default function InstagramAnalyzePage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(topics.categories).map(([category, items]) => (
-                  <div
-                    key={category}
-                    className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4"
-                  >
-                    <h4 className="font-medium mb-2 text-sm">{category} ({items.length})</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {items.slice(0, 8).map((item, i) => (
-                        <span
-                          key={i}
-                          className="text-xs px-2 py-1 rounded bg-muted/50 text-muted-foreground"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                      {items.length > 8 && (
-                        <span className="text-xs px-2 py-1 text-muted-foreground">
-                          +{items.length - 8} daha
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <TopicCard key={category} category={category} items={items} />
                 ))}
               </div>
             </section>
@@ -218,96 +235,29 @@ export default function InstagramAnalyzePage() {
                 <Bookmark className="h-5 w-5" />
                 Kayıtlı İçerikler
               </h2>
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                  <h3 className="text-md font-semibold mb-4">En Çok Kaydettiğin Hesaplar</h3>
-                  <div className="space-y-2">
-                    {savedPosts.topAccounts.slice(0, 10).map((item, i) => (
-                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
-                        <a 
-                          href={`https://instagram.com/${item.account}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm hover:underline"
-                        >
-                          @{item.account}
-                        </a>
-                        <span className="text-xs text-muted-foreground">{item.count} kayıt</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                  <h3 className="text-md font-semibold mb-4">İçerik Türü Dağılımı</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "Reels", value: savedPosts.contentTypes?.reels || 0 },
-                          { name: "Posts", value: savedPosts.contentTypes?.posts || 0 },
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        label={({ name, value }) => `${name}: ${value}`}
+              <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                <h3 className="text-md font-semibold mb-4">
+                  En Çok Kaydettiğin Hesaplar
+                </h3>
+                <div className="space-y-2">
+                  {savedPosts.topAccounts.slice(0, 10).map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center p-2 rounded bg-muted/30"
+                    >
+                      <a
+                        href={`https://instagram.com/${item.account}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm hover:underline"
                       >
-                        <Cell fill="#ec4899" />
-                        <Cell fill="#8b5cf6" />
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Login Activity */}
-          {loginActivity?.loginsByHour && loginActivity.loginsByHour.length > 0 && (
-            <section>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Giriş Aktivitesi
-              </h2>
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                  <h3 className="text-md font-semibold mb-4">Saate Göre Giriş Dağılımı</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={loginActivity.loginsByHour}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis 
-                        dataKey="hour" 
-                        tick={{ fill: "#9ca3af", fontSize: 10 }}
-                        tickFormatter={(val) => `${val}:00`}
-                      />
-                      <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "none", borderRadius: "8px" }}
-                        labelFormatter={(val) => `${val}:00 - ${val}:59`}
-                      />
-                      <Bar dataKey="count" fill="#8b5cf6" radius={[2, 2, 0, 0]} name="Giriş" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
-                    <Smartphone className="h-4 w-4" />
-                    Cihaz Dağılımı
-                  </h3>
-                  {loginActivity.deviceDistribution && loginActivity.deviceDistribution.length > 0 ? (
-                    <div className="space-y-2">
-                      {loginActivity.deviceDistribution.map((item, i) => (
-                        <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
-                          <span className="text-sm">{item.device}</span>
-                          <span className="text-xs text-muted-foreground">{item.percentage}%</span>
-                        </div>
-                      ))}
+                        @{item.account}
+                      </a>
+                      <span className="text-xs text-muted-foreground">
+                        {item.count} kayıt
+                      </span>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Cihaz bilgisi bulunamadı</p>
-                  )}
+                  ))}
                 </div>
               </div>
             </section>
@@ -329,10 +279,12 @@ export default function InstagramAnalyzePage() {
               />
               <AccountList
                 title="Seni Takip Etmeyenler"
-                accounts={followers?.notFollowingBack?.map(f => ({ 
-                  username: f.username, 
-                  count: null 
-                })) || []}
+                accounts={
+                  followers?.notFollowingBack?.map((f) => ({
+                    username: f.username,
+                    count: null,
+                  })) || []
+                }
                 maxVisible={10}
                 showCount={false}
                 emptyMessage="Herkes seni takip ediyor! 🎉"
@@ -346,19 +298,23 @@ export default function InstagramAnalyzePage() {
             <div className="grid gap-6 lg:grid-cols-2">
               <AccountList
                 title="Karşılıklı Takipler"
-                accounts={followers?.mutuals?.slice(0, 50).map(f => ({ 
-                  username: f.username, 
-                  count: null 
-                })) || []}
+                accounts={
+                  followers?.mutuals?.slice(0, 50).map((f) => ({
+                    username: f.username,
+                    count: null,
+                  })) || []
+                }
                 maxVisible={10}
                 showCount={false}
               />
               <AccountList
                 title="Seni Takip Edip Takip Etmediğin"
-                accounts={followers?.youDontFollow?.slice(0, 50).map(f => ({ 
-                  username: f.username, 
-                  count: null 
-                })) || []}
+                accounts={
+                  followers?.youDontFollow?.slice(0, 50).map((f) => ({
+                    username: f.username,
+                    count: null,
+                  })) || []
+                }
                 maxVisible={10}
                 showCount={false}
                 emptyMessage="Takipçilerinin hepsini takip ediyorsun"

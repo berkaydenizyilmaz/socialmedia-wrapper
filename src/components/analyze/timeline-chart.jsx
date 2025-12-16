@@ -78,13 +78,13 @@ export function TimelineChart({
             />
             <XAxis
               dataKey="formattedDate"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "#9ca3af", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "#9ca3af", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               width={40}
