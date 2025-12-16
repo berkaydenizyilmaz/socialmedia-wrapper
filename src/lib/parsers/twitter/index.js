@@ -6,6 +6,9 @@
 import { findFileByPath, readTwitterJsFile } from "@/lib/file-reader";
 import { parseLikes } from "./likes";
 import { parseFollowers } from "./followers";
+import { parseTweets } from "./tweets";
+import { parseInterests, parseAccount, parseBlocks } from "./interests";
+import { parseIpAudit, parseScreenNameChanges, parseMutes, parseDirectMessages } from "./security";
 
 // Known file paths in Twitter data export
 const FILE_PATHS = {
@@ -13,7 +16,13 @@ const FILE_PATHS = {
   followers: "follower.js",
   following: "following.js",
   tweets: "tweets.js",
+  personalization: "personalization.js",
+  account: "account.js",
   block: "block.js",
+  ipAudit: "ip-audit.js",
+  screenNameChange: "screen-name-change.js",
+  mute: "mute.js",
+  directMessages: "direct-messages.js",
 };
 
 /**
@@ -27,6 +36,14 @@ export async function parseTwitterData(files, onProgress) {
   const result = {
     likes: null,
     followers: null,
+    tweets: null,
+    interests: null,
+    account: null,
+    blocks: null,
+    ipAudit: null,
+    screenNameChanges: null,
+    mutes: null,
+    directMessages: null,
     metadata: {
       parsedAt: new Date().toISOString(),
       fileCount: Object.keys(files).length,
@@ -34,28 +51,33 @@ export async function parseTwitterData(files, onProgress) {
     }
   };
 
-  const progressStep = 100 / 4;
-  let currentProgress = 0;
+  const totalSteps = 10;
+  let currentStep = 0;
 
   // Helper function to safely parse a Twitter JS file
-  const safeParseFile = async (path, parser, ...extraArgs) => {
+  const safeParseFile = async (path, parser) => {
     try {
       const file = findFileByPath(files, path);
       if (!file) {
         return null;
       }
       const data = await readTwitterJsFile(file);
-      return parser(data, ...extraArgs);
+      return parser(data);
     } catch (err) {
       errors.push({ path, error: err.message });
       return null;
     }
   };
 
+  // Parse tweets
+  result.tweets = await safeParseFile(FILE_PATHS.tweets, parseTweets);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
   // Parse likes
   result.likes = await safeParseFile(FILE_PATHS.likes, parseLikes);
-  currentProgress += progressStep;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Parse followers and following together
   const followersFile = findFileByPath(files, FILE_PATHS.followers);
@@ -68,8 +90,43 @@ export async function parseTwitterData(files, onProgress) {
   } catch (err) {
     errors.push({ path: "followers/following", error: err.message });
   }
-  currentProgress += progressStep * 2;
-  onProgress?.(Math.round(currentProgress));
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse interests/personalization
+  result.interests = await safeParseFile(FILE_PATHS.personalization, parseInterests);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse account
+  result.account = await safeParseFile(FILE_PATHS.account, parseAccount);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse blocks
+  result.blocks = await safeParseFile(FILE_PATHS.block, parseBlocks);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse IP audit
+  result.ipAudit = await safeParseFile(FILE_PATHS.ipAudit, parseIpAudit);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse screen name changes
+  result.screenNameChanges = await safeParseFile(FILE_PATHS.screenNameChange, parseScreenNameChanges);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse mutes
+  result.mutes = await safeParseFile(FILE_PATHS.mute, parseMutes);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse direct messages
+  result.directMessages = await safeParseFile(FILE_PATHS.directMessages, parseDirectMessages);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
   // Finalize
   result.metadata.errors = errors;
@@ -85,11 +142,44 @@ export async function parseTwitterData(files, onProgress) {
  */
 export function getTwitterSummary(data) {
   return {
+    // Tweets
+    totalTweets: data.tweets?.total || 0,
     totalLikes: data.likes?.total || 0,
+    
+    // Followers
     followersCount: data.followers?.stats?.followersCount || 0,
     followingCount: data.followers?.stats?.followingCount || 0,
     mutualsCount: data.followers?.stats?.mutualsCount || 0,
     notFollowingBackCount: data.followers?.stats?.notFollowingBackCount || 0,
-    recentLikes: data.likes?.recentLikes?.slice(0, 10) || []
+    
+    // Tweet analytics
+    tweetTypes: data.tweets?.tweetTypes || {},
+    engagement: data.tweets?.engagement || {},
+    topSource: data.tweets?.sourceDistribution?.[0]?.name || 'Unknown',
+    
+    // Account
+    username: data.account?.username || 'Unknown',
+    accountAge: data.account?.accountAge || null,
+    
+    // Interests
+    interestCount: data.interests?.totalCount || 0,
+    
+    // Blocks & Mutes
+    blockedCount: data.blocks?.total || 0,
+    mutedCount: data.mutes?.total || 0,
+    
+    // Security
+    uniqueLoginIps: data.ipAudit?.uniqueIps || 0,
+    totalLogins: data.ipAudit?.total || 0,
+    usernameChanges: data.screenNameChanges?.total || 0,
+    
+    // DMs
+    dmConversations: data.directMessages?.totalConversations || 0,
+    totalDmMessages: data.directMessages?.totalMessages || 0,
+    
+    // Quick access
+    topHashtags: data.tweets?.topHashtags?.slice(0, 5) || [],
+    topMentions: data.tweets?.topMentions?.slice(0, 5) || [],
+    recentLikes: data.likes?.recentLikes?.slice(0, 5) || []
   };
 }

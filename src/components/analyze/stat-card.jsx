@@ -19,7 +19,7 @@ export function StatCard({
       {/* Background gradient glow */}
       <div className={cn(
         "absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-20",
-        `bg-gradient-to-br ${gradient}`
+        `bg-linear-to-br ${gradient}`
       )} />
       
       <div className="relative flex items-start justify-between">
@@ -34,7 +34,7 @@ export function StatCard({
         {Icon && (
           <div className={cn(
             "flex h-12 w-12 items-center justify-center rounded-xl",
-            `bg-gradient-to-br ${gradient}`
+            `bg-linear-to-br ${gradient}`
           )}>
             <Icon className="h-6 w-6 text-white" />
           </div>
