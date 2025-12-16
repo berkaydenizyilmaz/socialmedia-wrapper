@@ -8,7 +8,7 @@ import { parseLikes } from "./likes";
 import { parseFollowers } from "./followers";
 import { parseTweets } from "./tweets";
 import { parseInterests, parseAccount, parseBlocks } from "./interests";
-import { parseIpAudit, parseScreenNameChanges, parseMutes, parseDirectMessages } from "./security";
+import { parseScreenNameChanges, parseMutes, parseDirectMessages } from "./security";
 
 // Known file paths in Twitter data export
 const FILE_PATHS = {
@@ -19,7 +19,6 @@ const FILE_PATHS = {
   personalization: "personalization.js",
   account: "account.js",
   block: "block.js",
-  ipAudit: "ip-audit.js",
   screenNameChange: "screen-name-change.js",
   mute: "mute.js",
   directMessages: "direct-messages.js",
@@ -40,7 +39,6 @@ export async function parseTwitterData(files, onProgress) {
     interests: null,
     account: null,
     blocks: null,
-    ipAudit: null,
     screenNameChanges: null,
     mutes: null,
     directMessages: null,
@@ -51,7 +49,7 @@ export async function parseTwitterData(files, onProgress) {
     }
   };
 
-  const totalSteps = 10;
+  const totalSteps = 9;
   let currentStep = 0;
 
   // Helper function to safely parse a Twitter JS file
@@ -108,11 +106,6 @@ export async function parseTwitterData(files, onProgress) {
   currentStep++;
   onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
-  // Parse IP audit
-  result.ipAudit = await safeParseFile(FILE_PATHS.ipAudit, parseIpAudit);
-  currentStep++;
-  onProgress?.(Math.round((currentStep / totalSteps) * 100));
-
   // Parse screen name changes
   result.screenNameChanges = await safeParseFile(FILE_PATHS.screenNameChange, parseScreenNameChanges);
   currentStep++;
@@ -155,7 +148,8 @@ export function getTwitterSummary(data) {
     // Tweet analytics
     tweetTypes: data.tweets?.tweetTypes || {},
     engagement: data.tweets?.engagement || {},
-    topSource: data.tweets?.sourceDistribution?.[0]?.name || 'Unknown',
+    topSource: data.tweets?.sourceDistribution?.[0]?.name || 'Bilinmiyor',
+    activityPatterns: data.tweets?.activityPatterns || null,
     
     // Account
     username: data.account?.username || 'Unknown',
@@ -168,14 +162,13 @@ export function getTwitterSummary(data) {
     blockedCount: data.blocks?.total || 0,
     mutedCount: data.mutes?.total || 0,
     
-    // Security
-    uniqueLoginIps: data.ipAudit?.uniqueIps || 0,
-    totalLogins: data.ipAudit?.total || 0,
+    // Username changes
     usernameChanges: data.screenNameChanges?.total || 0,
     
     // DMs
     dmConversations: data.directMessages?.totalConversations || 0,
     totalDmMessages: data.directMessages?.totalMessages || 0,
+    dmTotals: data.directMessages?.totals || null,
     
     // Quick access
     topHashtags: data.tweets?.topHashtags?.slice(0, 5) || [],

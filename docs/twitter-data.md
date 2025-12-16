@@ -2,45 +2,41 @@
 
 Kullanılan dosyalar ve her birinden üretilen analizler:
 
-| Dosya                         | Analiz Çıktıları                                                                                                                                   |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tweets.js`                   | Zaman serisi (aylık), kaynak dağılımı (Android/Web), tweet türleri (orijinal/yanıt/RT), top hashtag/mention, en popüler tweetler, engagement stats |
-| `like.js`                     | Toplam beğeni sayısı, son beğenilen tweetler listesi                                                                                               |
-| `follower.js`, `following.js` | Takipçi/takip edilen sayıları, karşılıklı takip, geri takip etmeyenler                                                                             |
-| `personalization.js`          | İlgi alanları kategoriye göre gruplandırılmış (Spor, Teknoloji, Eğlence vb.), cinsiyet, dil                                                        |
-| `account.js`                  | Kullanıcı adı, hesap yaşı (yıl/ay olarak)                                                                                                          |
-| `block.js`                    | Engellenen hesap sayısı                                                                                                                            |
-| `ip-audit.js`                 | Saate göre giriş dağılımı (heatmap), top IP adresleri, toplam giriş sayısı, farklı IP sayısı                                                       |
-| `screen-name-change.js`       | Kullanıcı adı değişiklik geçmişi (tarih, eski → yeni)                                                                                              |
-| `mute.js`                     | Sessize alınan hesap sayısı                                                                                                                        |
-| `direct-messages.js`          | Toplam konuşma, toplam mesaj, ortalama mesaj/konuşma                                                                                               |
+## 📥 Verilerini Nasıl Alırsın?
 
-## 📋 Gelecekte Eklenebilecekler
+1. **Ayarlar ve gizlilik** > **Hesabın**'a git
+2. **Verilerinin arşivini indir** seçeneğine tıkla
+3. **Arşiv iste** butonuna tıkla
+4. E-posta onayını tamamla
+5. **24-72 saat** bekle (hazırlık süreci)
+6. İndirme linki gelince ZIP'i indir
+7. ZIP'i çıkar ve yükle
 
-| Dosya                                    | Potansiyel Analiz                            |
-| ---------------------------------------- | -------------------------------------------- |
-| `direct-messages-group.js`               | Grup DM istatistikleri, grup boyutu dağılımı |
-| `device-token.js`, `ni-devices.js`       | Kullanılan cihaz/platform türleri            |
-| `account-timezone.js`                    | Zaman dilimi değişiklik geçmişi              |
-| `spaces-metadata.js`                     | Spaces oturum bilgileri                      |
-| `community-tweet.js`                     | Topluluk tweet'leri analizi                  |
-| `saved-search.js`                        | Kayıtlı arama başlıkları                     |
-| `deleted-tweets.js`                      | Silinen tweet istatistikleri                 |
-| `lists-created.js`, `lists-member.js`    | Liste kullanım özeti                         |
-| `ad-engagements.js`, `ad-impressions.js` | Reklam etkileşim analizi                     |
-| `grok-chat-item.js`                      | Grok sohbet geçmişi                          |
+> ⚠️ **Not**: Twitter arşivi hazırlanması Instagram'a göre daha uzun sürer.
+
+| Dosya                   | Analiz Çıktıları                                                            |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `tweets.js`             | Toplam tweet, timeline, aktivite profili, tweet türleri (orijinal/yanıt/RT) |
+| `like.js`               | Beğendiğin tweetler                                                         |
+| `follower.js`           | Takipçi listesi                                                             |
+| `following.js`          | Takip ettiklerin, karşılıklı takip, geri takip etmeyenler                   |
+| `personalization.js`    | İlgi alanları (kategorize), demografik bilgiler                             |
+| `account.js`            | Kullanıcı adı, hesap yaşı                                                   |
+| `block.js`              | Engellenenler                                                               |
+| `mute.js`               | Sessize alınanlar                                                           |
+| `screen-name-change.js` | Kullanıcı adı değişiklik geçmişi                                            |
+| `direct-messages.js`    | DM istatistikleri, gönderilen/alınan ayrımı                                 |
 
 ## Analiz Sayfası Bölümleri
 
-1. **Genel Bakış** - 9 stat card (tweet, beğeni, takipçi, takip, karşılıklı, geri takip etmiyor, ilgi alanı, engellenen, kaynak)
-2. **Tweet Zaman Çizelgesi** - Son 24 ay area chart
-3. **Kaynak & Tweet Türleri** - Pie chart + bar chart
-4. **Top Hashtag/Mention** - Tag cloud
-5. **İlgi Alanları** - Kategorize edilmiş listeler
-6. **En Popüler Tweetler** - Engagement'a göre sıralı
-7. **Son Beğenilenler** - Son beğenilen tweet listesi
-8. **Takipçi Analizi** - Geri takip etmiyor + karşılıklı listeler
-9. **Etkileşim İstatistikleri** - Toplam/ortalama beğeni/RT
-10. **Giriş Aktivitesi** - Saatlik heatmap + top IP'ler
-11. **Kullanıcı Adı Geçmişi** - Değişiklik timeline'ı
-12. **DM İstatistikleri** - Konuşma/mesaj sayıları
+1. **Genel Bakış** - Stat kartları (Tweet, Beğeni, Takipçi, Takip, Karşılıklı, Engellenen)
+2. **Tweet Zaman Çizelgesi** - Aylık tweet grafiği
+3. **Kaynak Dağılımı** - Android/iPhone/Web pasta grafiği
+4. **Tweet Türleri** - Orijinal/Yanıt/Retweet dağılımı
+5. **Top Hashtag'ler** - En çok kullandığın etiketler
+6. **En Çok Mention Edilen** - En çok bahsettiğin kişiler
+7. **İlgi Alanları** - Twitter'ın belirlediği ilgi alanları (kategorize)
+8. **En Popüler Tweetlerin** - En çok etkileşim alan tweetler
+9. **Aktivite Profili** - 🦉 Gece Kuşu / 🌅 Sabahçı analizi
+10. **Kullanıcı Adı Geçmişi** - Eski kullanıcı adların
+11. **Direkt Mesajlar** - Gönderilen/alınan mesaj istatistikleri

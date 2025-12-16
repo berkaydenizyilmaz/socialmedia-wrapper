@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,10 +22,10 @@ import {
   Sparkles,
   TrendingUp,
   Clock,
-  Globe,
   Mail,
   History,
   VolumeX,
+  ChevronDown,
 } from "lucide-react";
 import {
   BarChart,
@@ -68,7 +68,7 @@ export default function TwitterAnalyzePage() {
     );
   }
 
-  const { tweets, likes, followers, interests, account, blocks, ipAudit, screenNameChanges, directMessages } = twitterData;
+  const { tweets, likes, followers, interests, account, blocks, screenNameChanges, directMessages } = twitterData;
   const summary = twitterSummary;
 
   // Account age text
@@ -334,39 +334,9 @@ export default function TwitterAnalyzePage() {
             )}
           </section>
 
-          {/* Interests */}
+          {/* Interests - Expandable like Instagram */}
           {interests?.categories && Object.keys(interests.categories).length > 0 && (
-            <section>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                İlgi Alanların ({interests.totalCount})
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Object.entries(interests.categories).map(([category, items]) => (
-                  <div
-                    key={category}
-                    className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4"
-                  >
-                    <h4 className="font-medium mb-2 text-sm">{category} ({items.length})</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {items.slice(0, 8).map((item, i) => (
-                        <span
-                          key={i}
-                          className="text-xs px-2 py-1 rounded bg-muted/50 text-muted-foreground"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                      {items.length > 8 && (
-                        <span className="text-xs px-2 py-1 text-muted-foreground">
-                          +{items.length - 8} daha
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <InterestsSection interests={interests} />
           )}
 
           {/* Top Tweets */}
@@ -536,44 +506,51 @@ export default function TwitterAnalyzePage() {
             </section>
           )}
 
-          {/* Login Activity Heatmap */}
-          {ipAudit?.loginsByHour && ipAudit.loginsByHour.length > 0 && (
+          {/* Activity Profile - Like Instagram */}
+          {tweets?.activityPatterns && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Giriş Aktivitesi
+                <Activity className="h-5 w-5" />
+                Aktivite Profilin
               </h2>
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                  <h3 className="text-md font-semibold mb-4">Saate Göre Giriş Dağılımı</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={ipAudit.loginsByHour}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis 
-                        dataKey="hour" 
-                        tick={{ fill: "#9ca3af", fontSize: 10 }}
-                        tickFormatter={(val) => `${val}:00`}
-                      />
-                      <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "none", borderRadius: "8px" }}
-                        labelFormatter={(val) => `${val}:00 - ${val}:59`}
-                      />
-                      <Bar dataKey="count" fill="#22c55e" radius={[2, 2, 0, 0]} name="Giriş" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                  <h3 className="text-md font-semibold mb-4">Top IP Adresleri ({ipAudit.uniqueIps} farklı)</h3>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {ipAudit.topIps?.slice(0, 8).map((item, i) => (
-                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
-                        <span className="font-mono text-sm">{item.ip}</span>
-                        <span className="text-xs text-muted-foreground">{item.count} giriş</span>
+              <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="text-4xl">{tweets.activityPatterns.dominant.emoji}</span>
+                      <div>
+                        <h3 className="text-xl font-bold">{tweets.activityPatterns.dominant.type}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Tweetlerinin %{tweets.activityPatterns.dominant.percentage}&apos;i bu zaman diliminde
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      İkincil: {tweets.activityPatterns.secondary.emoji} {tweets.activityPatterns.secondary.type} (%{tweets.activityPatterns.secondary.percentage})
+                    </p>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    {tweets.activityPatterns.periods.map((period, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span>{period.emoji}</span>
+                        <span className="text-sm w-20">{period.name}</span>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-linear-to-r from-blue-500 to-purple-500" 
+                            style={{ width: `${period.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground w-10">%{period.percentage}</span>
                       </div>
                     ))}
                   </div>
                 </div>
+                {tweets.activityPatterns.weekdayVsWeekend && (
+                  <div className="mt-4 pt-4 border-t border-border/50 flex gap-4 text-sm">
+                    <span>📅 Hafta içi: %{tweets.activityPatterns.weekdayVsWeekend.weekday}</span>
+                    <span>🎉 Hafta sonu: %{tweets.activityPatterns.weekdayVsWeekend.weekend}</span>
+                  </div>
+                )}
               </div>
             </section>
           )}
@@ -604,35 +581,141 @@ export default function TwitterAnalyzePage() {
             </section>
           )}
 
-          {/* DM Stats */}
+          {/* DM Stats - Detailed like Instagram */}
           {directMessages && directMessages.totalConversations > 0 && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                Direkt Mesaj İstatistikleri
+                Direkt Mesajlar
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 mb-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
-                  <p className="text-2xl font-bold text-blue-500">{directMessages.totalConversations}</p>
-                  <p className="text-sm text-muted-foreground">Toplam Konuşma</p>
+                  <p className="text-2xl font-bold">{directMessages.totalConversations}</p>
+                  <p className="text-xs text-muted-foreground">Sohbet</p>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
-                  <p className="text-2xl font-bold text-green-500">{directMessages.totalMessages}</p>
-                  <p className="text-sm text-muted-foreground">Toplam Mesaj</p>
+                  <p className="text-2xl font-bold">{directMessages.totalMessages?.toLocaleString("tr-TR")}</p>
+                  <p className="text-xs text-muted-foreground">Toplam Mesaj</p>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
-                  <p className="text-2xl font-bold text-purple-500">
-                    {directMessages.totalConversations > 0 
-                      ? (directMessages.totalMessages / directMessages.totalConversations).toFixed(1)
-                      : 0}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Ort. Mesaj/Konuşma</p>
+                  <p className="text-2xl font-bold text-green-400">{directMessages.totals?.sent?.toLocaleString("tr-TR") || 0}</p>
+                  <p className="text-xs text-muted-foreground">Gönderilen</p>
+                </div>
+                <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+                  <p className="text-2xl font-bold text-blue-400">{directMessages.totals?.received?.toLocaleString("tr-TR") || 0}</p>
+                  <p className="text-xs text-muted-foreground">Alınan</p>
                 </div>
               </div>
+              {directMessages.topBySent && directMessages.topByReceived && (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                    <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                      📤 En Çok Mesaj Attığın
+                    </h3>
+                    <div className="space-y-2">
+                      {directMessages.topBySent.slice(0, 5).map((c, i) => (
+                        <a
+                          key={i}
+                          href={`https://twitter.com/intent/user?user_id=${c.partner}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex justify-between items-center p-2 rounded bg-muted/30 hover:bg-muted/50 transition-colors"
+                        >
+                          <span className="text-sm font-mono text-blue-400 flex items-center gap-1">
+                            Kullanıcı #{c.partner?.slice(-6)}
+                            <ExternalLink className="h-3 w-3" />
+                          </span>
+                          <span className="text-xs text-muted-foreground">{c.sent?.total} mesaj</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                    <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                      📥 Sana En Çok Mesaj Atan
+                    </h3>
+                    <div className="space-y-2">
+                      {directMessages.topByReceived.slice(0, 5).map((c, i) => (
+                        <a
+                          key={i}
+                          href={`https://twitter.com/intent/user?user_id=${c.partner}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex justify-between items-center p-2 rounded bg-muted/30 hover:bg-muted/50 transition-colors"
+                        >
+                          <span className="text-sm font-mono text-blue-400 flex items-center gap-1">
+                            Kullanıcı #{c.partner?.slice(-6)}
+                            <ExternalLink className="h-3 w-3" />
+                          </span>
+                          <span className="text-xs text-muted-foreground">{c.received?.total} mesaj</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           )}
         </div>
       </main>
     </>
+  );
+}
+
+// Expandable Interests Section Component
+function InterestsSection({ interests }) {
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  const toggleCategory = (category) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <Sparkles className="h-5 w-5" />
+        İlgi Alanların ({interests.totalCount})
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(interests.categories).map(([category, items]) => {
+          const isExpanded = expandedCategories[category];
+          const displayItems = isExpanded ? items : items.slice(0, 8);
+          const hasMore = items.length > 8;
+
+          return (
+            <div
+              key={category}
+              className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4"
+            >
+              <h4 className="font-medium mb-2 text-sm">{category} ({items.length})</h4>
+              <div className="flex flex-wrap gap-1">
+                {displayItems.map((item, i) => (
+                  <span
+                    key={i}
+                    className="text-xs px-2 py-1 rounded bg-muted/50 text-muted-foreground"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+              {hasMore && (
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="mt-2 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <ChevronDown
+                    className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                  />
+                  {isExpanded ? "Daha az göster" : `+${items.length - 8} daha göster`}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

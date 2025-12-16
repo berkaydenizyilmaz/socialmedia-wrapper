@@ -46,7 +46,11 @@ export async function readTwitterJsFile(file) {
  */
 export function findFileByPath(files, partialPath) {
   const paths = Object.keys(files);
-  const match = paths.find((p) => p.includes(partialPath));
+  // Match exact filename or path ending with /filename
+  const match = paths.find((p) => {
+    const filename = p.split('/').pop();
+    return filename === partialPath || p.endsWith('/' + partialPath);
+  });
   return match ? files[match] : null;
 }
 

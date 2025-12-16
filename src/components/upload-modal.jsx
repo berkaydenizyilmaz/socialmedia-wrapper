@@ -35,11 +35,10 @@ const platformConfig = {
     title: "Twitter / X",
     gradient: "from-neutral-200 to-neutral-400",
     steps: [
-      "X/Twitter Ayarlar sayfasına git",
-      "\"Arşivini indir\" seçeneğine tıkla",
-      "Doğrulama işlemini tamamla",
-      "İndirilen ZIP dosyasını çıkar",
-      "Klasörü buraya yükle",
+      "Ayarlar ve gizlilik > Hesabın",
+      "Verilerinin arşivini indir > Arşiv iste",
+      "E-posta onayını tamamla (24-72 saat)",
+      "İndirilen ZIP'i çıkar ve yükle",
     ],
   },
 };

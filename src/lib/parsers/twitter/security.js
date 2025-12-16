@@ -3,57 +3,6 @@
  */
 
 /**
- * Parse IP audit data for login activity analysis
- * @param {Array} data - Parsed ip-audit.js content
- * @returns {Object} Processed login activity data
- */
-export function parseIpAudit(data) {
-  const logins = (data || []).map(item => {
-    const audit = item.ipAudit;
-    return {
-      ip: audit?.loginIp,
-      createdAt: audit?.createdAt ? new Date(audit.createdAt) : null
-    };
-  }).filter(l => l.ip);
-
-  // IP frequency
-  const ipCounts = {};
-  logins.forEach(l => {
-    ipCounts[l.ip] = (ipCounts[l.ip] || 0) + 1;
-  });
-  const topIps = Object.entries(ipCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([ip, count]) => ({ ip, count }));
-
-  // Login times by hour (for heatmap)
-  const hourCounts = Array(24).fill(0);
-  logins.forEach(l => {
-    if (l.createdAt) {
-      const hour = l.createdAt.getHours();
-      hourCounts[hour]++;
-    }
-  });
-  const loginsByHour = hourCounts.map((count, hour) => ({ hour, count }));
-
-  // Unique IPs count
-  const uniqueIps = Object.keys(ipCounts).length;
-
-  // Recent logins
-  const recentLogins = logins
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, 20);
-
-  return {
-    total: logins.length,
-    uniqueIps,
-    topIps,
-    loginsByHour,
-    recentLogins
-  };
-}
-
-/**
  * Parse screen name change history
  * @param {Array} data - Parsed screen-name-change.js content
  * @returns {Object} Username change history
@@ -95,50 +44,125 @@ export function parseMutes(data) {
 }
 
 /**
- * Parse direct messages for analytics
+ * Parse direct messages for detailed analytics (like Instagram)
  * @param {Array} data - Parsed direct-messages.js content
- * @returns {Object} DM analytics
+ * @param {string} ownerId - Account owner's ID (optional, will be detected)
+ * @returns {Object} Detailed DM analytics
  */
-export function parseDirectMessages(data) {
+export function parseDirectMessages(data, ownerId = null) {
+  let detectedOwnerId = ownerId;
+  
   const conversations = (data || []).map(item => {
     const conv = item.dmConversation;
     const messages = conv?.messages || [];
+    const convId = conv?.conversationId || '';
     
+    // Get participants from conversation ID
+    const participants = convId.split('-').filter(id => id);
+    
+    // Try to detect owner ID (most frequent sender across all conversations)
+    if (!detectedOwnerId && messages.length > 0) {
+      const senderId = messages[0]?.messageCreate?.senderId;
+      if (senderId) {
+        detectedOwnerId = senderId;
+      }
+    }
+
+    // Analyze messages
+    let sentCount = 0;
+    let receivedCount = 0;
+    let sentWithMedia = 0;
+    let receivedWithMedia = 0;
+    
+    const otherParticipant = participants.find(p => p !== detectedOwnerId) || participants[0];
+
+    messages.forEach(m => {
+      const msg = m.messageCreate;
+      if (!msg) return;
+      
+      const senderId = msg.senderId;
+      const hasMedia = (msg.mediaUrls?.length || 0) > 0 || (msg.urls?.length || 0) > 0;
+      
+      if (senderId === detectedOwnerId) {
+        sentCount++;
+        if (hasMedia) sentWithMedia++;
+      } else {
+        receivedCount++;
+        if (hasMedia) receivedWithMedia++;
+      }
+    });
+
     return {
-      conversationId: conv?.conversationId,
-      messageCount: messages.length,
-      participants: getParticipantsFromConvId(conv?.conversationId),
-      messages: messages.map(m => ({
-        senderId: m.messageCreate?.senderId,
-        recipientId: m.messageCreate?.recipientId,
-        text: m.messageCreate?.text,
-        date: m.messageCreate?.createdAt ? new Date(m.messageCreate.createdAt) : null,
-        hasMedia: (m.messageCreate?.mediaUrls?.length || 0) > 0
-      }))
+      conversationId: convId,
+      partner: otherParticipant,
+      totalMessages: messages.length,
+      sent: {
+        total: sentCount,
+        withMedia: sentWithMedia
+      },
+      received: {
+        total: receivedCount,
+        withMedia: receivedWithMedia
+      },
+      lastMessage: messages[0]?.messageCreate?.createdAt 
+        ? new Date(messages[0].messageCreate.createdAt)
+        : null
     };
+  }).filter(c => c.totalMessages > 0);
+
+  if (conversations.length === 0) {
+    return {
+      totalConversations: 0,
+      totalMessages: 0,
+      totals: {
+        sent: 0,
+        received: 0,
+        sentMedia: 0,
+        receivedMedia: 0
+      },
+      topByTotal: [],
+      topBySent: [],
+      topByReceived: []
+    };
+  }
+
+  // Calculate totals
+  const totals = {
+    sent: 0,
+    received: 0,
+    sentMedia: 0,
+    receivedMedia: 0
+  };
+
+  conversations.forEach(c => {
+    totals.sent += c.sent.total;
+    totals.received += c.received.total;
+    totals.sentMedia += c.sent.withMedia;
+    totals.receivedMedia += c.received.withMedia;
   });
 
-  // Total message count
-  const totalMessages = conversations.reduce((sum, c) => sum + c.messageCount, 0);
-  
-  // Messages sent vs received (need account ID)
-  // Top conversations by message count
-  const topConversations = conversations
-    .sort((a, b) => b.messageCount - a.messageCount)
-    .slice(0, 10)
-    .map(c => ({
-      conversationId: c.conversationId,
-      messageCount: c.messageCount
-    }));
+  const totalMessages = totals.sent + totals.received;
+
+  // Top conversations by different metrics
+  const topByTotal = [...conversations]
+    .sort((a, b) => b.totalMessages - a.totalMessages)
+    .slice(0, 10);
+
+  const topBySent = [...conversations]
+    .sort((a, b) => b.sent.total - a.sent.total)
+    .slice(0, 10);
+
+  const topByReceived = [...conversations]
+    .sort((a, b) => b.received.total - a.received.total)
+    .slice(0, 10);
 
   return {
+    ownerId: detectedOwnerId,
     totalConversations: conversations.length,
     totalMessages,
-    topConversations
+    totals,
+    topByTotal,
+    topBySent,
+    topByReceived
   };
-}
-
-function getParticipantsFromConvId(convId) {
-  if (!convId) return [];
-  return convId.split('-').filter(id => id);
 }
