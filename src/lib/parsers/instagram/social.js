@@ -2,6 +2,8 @@
  * Parse Instagram story interactions
  */
 
+import { fixTurkishChars } from "@/lib/utils";
+
 /**
  * Parse story likes
  * @param {Object} data - Parsed story_likes.json content
@@ -94,7 +96,7 @@ export function parseSearches(data) {
     const timestamp = item.string_map_data?.["Tarih"]?.timestamp ||
                       item.string_map_data?.["Date"]?.timestamp;
     return {
-      query: searchValue,
+      query: fixTurkishChars(searchValue),
       timestamp,
       date: timestamp ? new Date(timestamp * 1000) : null
     };

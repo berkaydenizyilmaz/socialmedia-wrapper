@@ -12,6 +12,7 @@ import { parseTopics } from "./topics";
 import { parseSavedPosts } from "./saved";
 import { analyzeActivityPatterns } from "./activity";
 import { parseStoryLikes, parseCloseFriends, parseUnfollowed, parseSearches } from "./social";
+import { parseDirectMessages } from "./messages";
 
 // Known file paths in Instagram data export
 const FILE_PATHS = {
@@ -52,6 +53,7 @@ export async function parseInstagramData(files, onProgress) {
     closeFriends: null,
     unfollowed: null,
     searches: null,
+    directMessages: null,
     metadata: {
       parsedAt: new Date().toISOString(),
       fileCount: Object.keys(files).length,
@@ -59,7 +61,7 @@ export async function parseInstagramData(files, onProgress) {
     }
   };
 
-  const totalSteps = 13;
+  const totalSteps = 14;
   let currentStep = 0;
 
   // Helper function to safely parse a file
@@ -143,6 +145,15 @@ export async function parseInstagramData(files, onProgress) {
 
   // Parse searches
   result.searches = await safeParseFile(FILE_PATHS.searches, parseSearches);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse direct messages (special - needs files object)
+  try {
+    result.directMessages = await parseDirectMessages(files);
+  } catch (err) {
+    errors.push({ path: 'messages/inbox', error: err.message });
+  }
   currentStep++;
   onProgress?.(Math.round((currentStep / totalSteps) * 100));
 

@@ -21,20 +21,19 @@ const platformConfig = {
     icon: <Instagram className="h-5 w-5 text-white" />,
     title: "Instagram",
     gradient: "from-purple-500 via-pink-500 to-orange-500",
-    downloadUrl: "https://accountscenter.instagram.com/info_and_permissions/dyi/",
     steps: [
-      "Instagram Hesap Merkezi'ne git",
-      "\"Bilgilerini indir\" seçeneğine tıkla",
-      "Format olarak JSON seç",
-      "İndirilen ZIP dosyasını çıkar",
-      "Klasörü buraya yükle",
+      "Ayarlar > Hesaplar Merkezi'ne git",
+      "Bilgilerin ve izinlerin > Bilgilerini dışa aktar",
+      "Dışa aktarım oluştur > Cihaza aktar",
+      "Tarih aralığı: Her zaman seç",
+      "Format: JSON seç (HTML değil!)",
+      "İndirilen ZIP'i çıkar ve yükle",
     ],
   },
   twitter: {
     icon: <Image src="/twitter.png" alt="Twitter" width={20} height={20} className="h-5 w-5" />,
     title: "Twitter / X",
     gradient: "from-neutral-200 to-neutral-400",
-    downloadUrl: "https://x.com/settings/download_your_data",
     steps: [
       "X/Twitter Ayarlar sayfasına git",
       "\"Arşivini indir\" seçeneğine tıkla",
@@ -177,12 +176,6 @@ export function UploadModal({ platform, open, onOpenChange }) {
                   </li>
                 ))}
               </ol>
-              <Button variant="outline" size="sm" className="mt-2" asChild>
-                <a href={config.downloadUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  İndirme sayfasına git
-                </a>
-              </Button>
             </div>
 
             {/* Upload area */}

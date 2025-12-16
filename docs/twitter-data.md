@@ -2,8 +2,6 @@
 
 Kullanılan dosyalar ve her birinden üretilen analizler:
 
-## ✅ İmplemente Edilenler
-
 | Dosya                         | Analiz Çıktıları                                                                                                                                   |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tweets.js`                   | Zaman serisi (aylık), kaynak dağılımı (Android/Web), tweet türleri (orijinal/yanıt/RT), top hashtag/mention, en popüler tweetler, engagement stats |

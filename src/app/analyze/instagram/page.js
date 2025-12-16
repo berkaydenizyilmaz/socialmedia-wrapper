@@ -21,6 +21,8 @@ import {
   Calendar,
   Search,
   UserMinus,
+  Mail,
+  Send,
 } from "lucide-react";
 import {
   BarChart,
@@ -105,7 +107,7 @@ export default function InstagramAnalyzePage() {
     );
   }
 
-  const { likes, followers, comments, topics, savedPosts, activityPatterns, storyLikes, closeFriends, unfollowed, searches } = instagramData;
+  const { likes, followers, comments, topics, savedPosts, activityPatterns, storyLikes, closeFriends, unfollowed, searches, directMessages } = instagramData;
   const summary = instagramSummary;
 
   return (
@@ -456,6 +458,94 @@ export default function InstagramAnalyzePage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </section>
+          )}
+
+          {/* Direct Messages */}
+          {directMessages && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Direkt Mesajlar
+              </h2>
+              <div className="grid gap-4 mb-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+                  <p className="text-2xl font-bold">{directMessages.totals.conversations}</p>
+                  <p className="text-xs text-muted-foreground">Sohbet</p>
+                </div>
+                <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+                  <p className="text-2xl font-bold">{directMessages.totals.totalMessages.toLocaleString("tr-TR")}</p>
+                  <p className="text-xs text-muted-foreground">Toplam Mesaj</p>
+                </div>
+                <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+                  <p className="text-2xl font-bold text-green-400">{directMessages.totals.totalSentText.toLocaleString("tr-TR")}</p>
+                  <p className="text-xs text-muted-foreground">Gönderilen (Metin)</p>
+                </div>
+                <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+                  <p className="text-2xl font-bold text-blue-400">{directMessages.totals.totalReceivedText.toLocaleString("tr-TR")}</p>
+                  <p className="text-xs text-muted-foreground">Alınan (Metin)</p>
+                </div>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {/* Top by text sent */}
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    <Send className="h-4 w-4 text-green-400" />
+                    En Çok Yazdığın Kişiler
+                  </h3>
+                  <div className="space-y-2">
+                    {directMessages.topBySentText.slice(0, 5).map((c, i) => (
+                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                        <span className="text-sm">{c.partner}</span>
+                        <span className="text-xs text-muted-foreground">{c.sent.text} mesaj</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Top by text received */}
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-blue-400" />
+                    Sana En Çok Yazan Kişiler
+                  </h3>
+                  <div className="space-y-2">
+                    {directMessages.topByReceivedText.slice(0, 5).map((c, i) => (
+                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                        <span className="text-sm">{c.partner}</span>
+                        <span className="text-xs text-muted-foreground">{c.received.text} mesaj</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Top by shares received */}
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    🎬 Sana En Çok Reel/İçerik Atan
+                  </h3>
+                  <div className="space-y-2">
+                    {directMessages.topByReceivedShares.slice(0, 5).map((c, i) => (
+                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                        <span className="text-sm">{c.partner}</span>
+                        <span className="text-xs text-muted-foreground">{c.received.shares} paylaşım</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Top by shares sent */}
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    📤 En Çok Reel/İçerik Attığın
+                  </h3>
+                  <div className="space-y-2">
+                    {directMessages.topBySentShares.slice(0, 5).map((c, i) => (
+                      <div key={i} className="flex justify-between items-center p-2 rounded bg-muted/30">
+                        <span className="text-sm">{c.partner}</span>
+                        <span className="text-xs text-muted-foreground">{c.sent.shares} paylaşım</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
           )}
