@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Instagram, Upload, FolderOpen, CheckCircle2, ExternalLink, AlertCircle } from "lucide-react";
 import {
@@ -45,6 +46,7 @@ const platformConfig = {
 };
 
 export function UploadModal({ platform, open, onOpenChange }) {
+  const router = useRouter();
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadState, setUploadState] = useState("idle"); // idle, uploading, processing, success, error
@@ -260,7 +262,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
                 className="mt-4" 
                 onClick={() => {
                   onOpenChange(false);
-                  // TODO: Navigate to analysis page
+                  router.push(`/analyze/${platform}`);
                 }}
               >
                 Analizi Görüntüle
