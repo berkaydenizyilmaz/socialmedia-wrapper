@@ -10,6 +10,8 @@ import { parseComments, parseReelsComments } from "./comments";
 import { parseLoginActivity } from "./security";
 import { parseTopics } from "./topics";
 import { parseSavedPosts } from "./saved";
+import { analyzeActivityPatterns } from "./activity";
+import { parseStoryLikes, parseCloseFriends, parseUnfollowed, parseSearches } from "./social";
 
 // Known file paths in Instagram data export
 const FILE_PATHS = {
@@ -22,6 +24,10 @@ const FILE_PATHS = {
   loginActivity: "security_and_login_information/login_and_profile_creation/login_activity.json",
   topics: "preferences/your_topics/recommended_topics.json",
   savedPosts: "your_instagram_activity/saved/saved_posts.json",
+  storyLikes: "your_instagram_activity/story_interactions/story_likes.json",
+  closeFriends: "connections/followers_and_following/close_friends.json",
+  unfollowed: "connections/followers_and_following/recently_unfollowed_profiles.json",
+  searches: "logged_information/recent_searches/word_or_phrase_searches.json",
 };
 
 /**
@@ -41,6 +47,11 @@ export async function parseInstagramData(files, onProgress) {
     loginActivity: null,
     topics: null,
     savedPosts: null,
+    activityPatterns: null,
+    storyLikes: null,
+    closeFriends: null,
+    unfollowed: null,
+    searches: null,
     metadata: {
       parsedAt: new Date().toISOString(),
       fileCount: Object.keys(files).length,
@@ -48,7 +59,7 @@ export async function parseInstagramData(files, onProgress) {
     }
   };
 
-  const totalSteps = 9;
+  const totalSteps = 13;
   let currentStep = 0;
 
   // Helper function to safely parse a file
@@ -115,6 +126,31 @@ export async function parseInstagramData(files, onProgress) {
   currentStep++;
   onProgress?.(Math.round((currentStep / totalSteps) * 100));
 
+  // Parse story likes
+  result.storyLikes = await safeParseFile(FILE_PATHS.storyLikes, parseStoryLikes);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse close friends
+  result.closeFriends = await safeParseFile(FILE_PATHS.closeFriends, parseCloseFriends);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse unfollowed profiles
+  result.unfollowed = await safeParseFile(FILE_PATHS.unfollowed, parseUnfollowed);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Parse searches
+  result.searches = await safeParseFile(FILE_PATHS.searches, parseSearches);
+  currentStep++;
+  onProgress?.(Math.round((currentStep / totalSteps) * 100));
+
+  // Analyze activity patterns (computed from likes + comments)
+  const allLikes = result.likes?.likes || [];
+  const allComments = result.comments?.comments || [];
+  result.activityPatterns = analyzeActivityPatterns(allLikes, allComments);
+
   // Finalize
   result.metadata.errors = errors;
   onProgress?.(100);
@@ -141,7 +177,7 @@ export function getInstagramSummary(data) {
     // New stats
     topicsCount: data.topics?.total || 0,
     savedPostsCount: data.savedPosts?.total || 0,
-    loginCount: data.loginActivity?.total || 0,
-    uniqueLoginIps: data.loginActivity?.uniqueIps || 0
+    storyLikesCount: data.storyLikes?.total || 0,
+    closeFriendsCount: data.closeFriends?.total || 0
   };
 }

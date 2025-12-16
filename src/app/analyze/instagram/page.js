@@ -16,6 +16,11 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  Moon,
+  Sun,
+  Calendar,
+  Search,
+  UserMinus,
 } from "lucide-react";
 import {
   BarChart,
@@ -100,7 +105,7 @@ export default function InstagramAnalyzePage() {
     );
   }
 
-  const { likes, followers, comments, topics, savedPosts } = instagramData;
+  const { likes, followers, comments, topics, savedPosts, activityPatterns, storyLikes, closeFriends, unfollowed, searches } = instagramData;
   const summary = instagramSummary;
 
   return (
@@ -192,6 +197,62 @@ export default function InstagramAnalyzePage() {
             </div>
           </section>
 
+          {/* Activity Patterns - Night Owl vs Early Bird */}
+          {activityPatterns && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                {activityPatterns.dominant.emoji === "🦉" ? (
+                  <Moon className="h-5 w-5" />
+                ) : (
+                  <Sun className="h-5 w-5" />
+                )}
+                Aktivite Profilin
+              </h2>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {/* Main Result Card */}
+                <div className="rounded-2xl border border-border/50 bg-linear-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-sm p-6">
+                  <div className="text-center">
+                    <span className="text-6xl">{activityPatterns.dominant.emoji}</span>
+                    <h3 className="text-2xl font-bold mt-4">
+                      Sen bir {activityPatterns.dominant.type}sun!
+                    </h3>
+                    <p className="text-muted-foreground mt-2">
+                      Etkileşimlerinin <span className="text-primary font-semibold">%{activityPatterns.dominant.percentage}</span>&apos;i {activityPatterns.dominant.type.toLowerCase()} saatlerinde
+                    </p>
+                  </div>
+                </div>
+
+                {/* Period Distribution */}
+                <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Zaman Dağılımı
+                  </h3>
+                  <div className="space-y-3">
+                    {activityPatterns.periods.map((period) => (
+                      <div key={period.name}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>{period.emoji} {period.name} ({period.range})</span>
+                          <span className="text-muted-foreground">%{period.percentage}</span>
+                        </div>
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-linear-to-r from-purple-500 to-pink-500 rounded-full transition-all"
+                            style={{ width: `${period.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-border/50 flex justify-between text-sm">
+                    <span>Hafta içi: %{activityPatterns.weekdayVsWeekend.weekday}</span>
+                    <span>Hafta sonu: %{activityPatterns.weekdayVsWeekend.weekend}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Timeline Charts */}
           <section>
             <h2 className="text-lg font-semibold mb-4">
@@ -259,6 +320,142 @@ export default function InstagramAnalyzePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {/* Story Likes */}
+          {storyLikes?.topAccounts && storyLikes.topAccounts.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Heart className="h-5 w-5 text-pink-500" />
+                Hikaye Beğenileri ({storyLikes.total})
+              </h2>
+              <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                <h3 className="text-md font-semibold mb-4">
+                  En Çok Hikayesini Beğendiğin Hesaplar
+                </h3>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {storyLikes.topAccounts.slice(0, 12).map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center p-2 rounded bg-muted/30"
+                    >
+                      <a
+                        href={`https://instagram.com/${item.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm hover:underline"
+                      >
+                        @{item.username}
+                      </a>
+                      <span className="text-xs text-muted-foreground">
+                        {item.count} ❤️
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Close Friends */}
+          {closeFriends?.friends && closeFriends.friends.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                💚 Yakın Arkadaşların ({closeFriends.total})
+              </h2>
+              <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                <div className="flex flex-wrap gap-2">
+                  {closeFriends.friends.map((friend, i) => (
+                    <a
+                      key={i}
+                      href={friend.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-sm hover:bg-green-500/20 transition-colors"
+                    >
+                      @{friend.username}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Recently Unfollowed */}
+          {unfollowed?.profiles && unfollowed.profiles.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <UserMinus className="h-5 w-5" />
+                Son Takip Bıraktıkların ({unfollowed.total})
+              </h2>
+              <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                <div className="space-y-2">
+                  {unfollowed.profiles.map((profile, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center p-2 rounded bg-muted/30"
+                    >
+                      <a
+                        href={profile.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm hover:underline"
+                      >
+                        @{profile.username}
+                      </a>
+                      {profile.unfollowedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          {profile.unfollowedAt.toLocaleDateString("tr-TR")}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Search History */}
+          {searches && (searches.topSearches?.length > 0 || searches.topWords?.length > 0) && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                Arama Geçmişin
+              </h2>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {searches.topSearches?.length > 0 && (
+                  <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                    <h3 className="text-md font-semibold mb-4">En Çok Aranan 5 Arama</h3>
+                    <div className="space-y-2">
+                      {searches.topSearches.map((item, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center p-2 rounded bg-muted/30"
+                        >
+                          <span className="text-sm">{item.query}</span>
+                          <span className="text-xs text-muted-foreground">{item.count}x</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {searches.topWords?.length > 0 && (
+                  <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
+                    <h3 className="text-md font-semibold mb-4">En Çok Geçen 5 Kelime</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {searches.topWords.map((item, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-sm"
+                        >
+                          {item.word} ({item.count})
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           )}
