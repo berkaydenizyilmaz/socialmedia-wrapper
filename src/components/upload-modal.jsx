@@ -58,6 +58,7 @@ export function UploadModal({ platform, open, onOpenChange }) {
     progress: uploadProgress,
     stats,
     handleInputChange,
+    handleDrop: hookHandleDrop,
     reset: resetFileUpload
   } = useFileUpload({
     expectedPlatform: platform,
@@ -94,20 +95,27 @@ export function UploadModal({ platform, open, onOpenChange }) {
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragging(false);
-    // Unfortunately, webkitdirectory doesn't work with drag & drop
-    // So we just show a message to use the file picker
-    setUploadError("Klasör sürüklemek şu an desteklenmiyor. Lütfen tıklayarak klasör seçin.");
-    setUploadState("error");
-  }, []);
+    setUploadState("uploading");
+    setUploadError(null);
+    hookHandleDrop(e);
+  }, [hookHandleDrop]);
 
   const handleClick = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
   const handleFileChange = useCallback((e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Set loading state immediately
     setUploadState("uploading");
     setUploadError(null);
-    handleInputChange(e);
+    
+    // Delay processing to allow UI to update first
+    setTimeout(() => {
+      handleInputChange(e);
+    }, 50);
   }, [handleInputChange]);
 
   const resetState = useCallback(() => {
